@@ -1,6 +1,6 @@
 {
   "name": "digital400-storycraft",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple configurable story-crafting tool for Digital400 (Pvt) Ltd",
   "type": "module",
   "private": false,
@@ -11,7 +11,8 @@
     "start": "node src/cli.js",
     "storycraft": "node src/cli.js",
     "check": "find src -name '*.js' -print0 | xargs -0 -I{} node --check {}",
-    "prepublishOnly": "npm run check"
+    "check:templates": "node src/scripts/validate-template-secrets.js",
+    "prepublishOnly": "npm run check && npm run check:templates"
   },
   "engines": {
     "node": ">=18"
