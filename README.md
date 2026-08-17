@@ -24,14 +24,10 @@ This MVP is intentionally minimal and configurable so it can evolve when your pr
    npm install
    ```
 2. Copy env template:
-   - macOS/Linux:
-     ```bash
-     cp .env.example .env
-     ```
-   - Windows PowerShell:
-     ```powershell
-     Copy-Item .env.example .env
-     ```
+    - any OS:
+       ```bash
+       npx storycraft init
+       ```
 3. Update `.env` and `config/default.config.json`.
 4. Run:
    ```bash
@@ -40,6 +36,7 @@ This MVP is intentionally minimal and configurable so it can evolve when your pr
    ```
 
 ## Commands
+- `init` : creates `.env`, `.env.example`, and `config/default.config.json` in current project.
 - `setup` : validates Confluence and Jira connections.
 - `projects` : lists Jira projects/spaces.
 - `run` : guided flow (project selection -> create epic/story/task -> optional sprint).

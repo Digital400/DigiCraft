@@ -8,16 +8,28 @@ import { JiraClient } from "./integrations/jiraClient.js";
 import { listJiraProjects, runSetup, runStoryCraftFlow } from "./usecases/storycraft.js";
 import { printHeader } from "./utils/io.js";
 import { pickAiProviderForRun } from "./usecases/aiSelection.js";
+import { initProjectTemplates } from "./usecases/initProject.js";
 
 async function main() {
   try {
+    const command = process.argv[2] || COMMANDS.RUN;
+    const forceInit = process.argv.includes("--force");
+
+    if (command === COMMANDS.INIT) {
+      const result = initProjectTemplates({ force: forceInit });
+      printHeader("StoryCraft Project Init");
+      console.log(`.env: ${result.env.status} (${result.env.path})`);
+      console.log(`.env.example: ${result.envExample.status} (${result.envExample.path})`);
+      console.log(`config/default.config.json: ${result.config.status} (${result.config.path})`);
+      console.log("Use --force to overwrite existing files.");
+      return;
+    }
+
     loadDotEnv();
     const config = loadConfig();
 
     const jiraClient = new JiraClient(getJiraCredentials());
     const hldProvider = buildHldProvider(config, getConfluenceCredentials());
-
-    const command = process.argv[2] || COMMANDS.RUN;
 
     printHeader(`${config.app.toolName} - ${config.app.company}`);
 
