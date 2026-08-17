@@ -1,0 +1,33 @@
+{
+  "name": "@digital400/storycraft",
+  "version": "0.1.0",
+  "description": "Simple configurable story-crafting tool for Digital400 (Pvt) Ltd",
+  "type": "module",
+  "private": false,
+  "bin": {
+    "storycraft": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "storycraft": "node src/cli.js",
+    "check": "find src -name '*.js' -print0 | xargs -0 -I{} node --check {}",
+    "prepublishOnly": "npm run check"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital400/DigiCraft.git"
+  },
+  "files": [
+    "src",
+    "config/default.config.json",
+    "README.md",
+    ".env.example"
+  ],
+  "license": "UNLICENSED"
+}

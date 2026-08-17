@@ -1,0 +1,64 @@
+{
+  "app": {
+    "company": "Digital400 (Pvt) Ltd",
+    "toolName": "StoryCraft"
+  },
+  "source": {
+    "provider": "confluence",
+    "confluence": {
+      "spaceKey": "ENG",
+      "hldPageId": "1427898369"
+    },
+    "mock": {
+      "hldTitle": "Sample HLD",
+      "features": [
+        {
+          "title": "User login",
+          "description": "Allow users to sign in securely",
+          "stories": [
+            {
+              "title": "As a user, I can sign in",
+              "tasks": [
+                "Design sign-in form",
+                "Implement API call",
+                "Add unit tests"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "jira": {
+    "defaultProjectKey": "",
+    "issueTypes": {
+      "epic": "Epic",
+      "story": "Story",
+      "task": "Task",
+      "subTask": "Sub-task"
+    },
+    "linking": {
+      "epicToStoryMode": "auto",
+      "taskToStoryMode": "issueLink",
+      "issueLinkType": "Relates"
+    },
+    "sprint": {
+      "autoStart": false,
+      "boardId": "",
+      "nameTemplate": "Sprint for {{epicTitle}}",
+      "goalTemplate": "Deliver stories for {{epicTitle}}"
+    }
+  },
+  "ai": {
+    "enabled": true,
+    "promptOnStart": true,
+    "provider": "auto",
+    "maxInputChars": 16000,
+    "models": {
+      "openai": "gpt-4.1-mini",
+      "openrouter": "openai/gpt-4o-mini",
+      "anthropic": "claude-3-5-sonnet-latest",
+      "github": "gpt-4.1-mini"
+    }
+  }
+}
