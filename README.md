@@ -122,10 +122,23 @@ Create a Personal Access Token with scopes:
 - `repo` (if repository is private)
 
 ### 3) Authenticate npm for GitHub Packages
-Add to your user-level `.npmrc`:
+Preferred (no token in files):
+- set environment variable `NODE_AUTH_TOKEN` to your GitHub PAT
+
+macOS/Linux:
+```bash
+export NODE_AUTH_TOKEN=YOUR_GITHUB_PAT
+```
+
+Windows PowerShell:
+```powershell
+$env:NODE_AUTH_TOKEN="YOUR_GITHUB_PAT"
+```
+
+This repo already has `.npmrc` configured for:
 ```ini
 @digital400:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
 ### 4) Publish package
@@ -137,8 +150,10 @@ npm publish
 In any team project, add to `.npmrc`:
 ```ini
 @digital400:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
+
+Then set `NODE_AUTH_TOKEN` in that shell before `npm install`.
 
 Install:
 ```bash
@@ -151,3 +166,11 @@ npx storycraft setup
 npx storycraft dry-run
 npx storycraft run
 ```
+
+### GitHub Packages 403 Troubleshooting
+If you get `403 Forbidden` when logging in or publishing:
+- Confirm PAT belongs to a user with access to `Digital400/DigiCraft`.
+- PAT scopes must include `write:packages` and `read:packages`.
+- Include `repo` scope when repository is private.
+- If organization uses SSO, authorize the PAT for the Digital400 org.
+- Use GitHub PAT, not npmjs token (`npm_...` tokens are for npmjs.org only).
