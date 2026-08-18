@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StoryCraft - Web Preview</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>StoryCraft Web Preview</h1>
+    <p>Digital400 (Pvt) Ltd</p>
+  </header>
+
+  <main>
+    <section id="config-section">
+      <h2>1) Connection Settings</h2>
+      <form id="config-form">
+        <fieldset>
+          <legend>Jira</legend>
+          <label>Jira Base URL<input type="text" name="jiraBaseUrl" placeholder="https://yourteam.atlassian.net" required /></label>
+          <label>Jira Email<input type="email" name="jiraEmail" required /></label>
+          <label>Jira API Token<input type="password" name="jiraApiToken" required /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Confluence</legend>
+          <label>Confluence Base URL<input type="text" name="confluenceBaseUrl" placeholder="https://yourteam.atlassian.net/wiki" required /></label>
+          <label>Confluence Email<input type="email" name="confluenceEmail" required /></label>
+          <label>Confluence API Token<input type="password" name="confluenceApiToken" required /></label>
+          <label>Confluence Space Key (optional)<input type="text" name="confluenceSpaceKey" /></label>
+          <label>Confluence HLD Page ID<input type="text" name="confluenceHldPageId" required /></label>
+        </fieldset>
+
+        <button type="submit">Confirm</button>
+      </form>
+      <p id="config-status"></p>
+    </section>
+
+    <section id="projects-section" hidden>
+      <h2>2) Select Jira Space</h2>
+      <ul id="projects-list"></ul>
+    </section>
+
+    <section id="results-section" hidden>
+      <h2>3) Story Craft Preview (Dry Run)</h2>
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

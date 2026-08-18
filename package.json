@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node src/cli.js",
     "storycraft": "node src/cli.js",
+    "web:preview": "node web/server.js",
     "check": "find src -name '*.js' -print0 | xargs -0 -I{} node --check {}",
     "check:templates": "node src/scripts/validate-template-secrets.js",
     "prepublishOnly": "npm run check && npm run check:templates"
