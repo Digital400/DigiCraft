@@ -25,6 +25,21 @@ async function main() {
       return;
     }
 
+    const initResult = initProjectTemplates({ force: false });
+    const createdTemplates = [initResult.env, initResult.envExample, initResult.config].filter(
+      (item) => item.status === "created"
+    );
+
+    if (createdTemplates.length > 0) {
+      printHeader("StoryCraft Project Init");
+      console.log("Created missing project templates in current directory:");
+      for (const item of createdTemplates) {
+        console.log(`- ${item.path}`);
+      }
+      console.log("Update .env and config/default.config.json before running StoryCraft.");
+      console.log("Use npx storycraft init --force to overwrite existing files.");
+    }
+
     loadDotEnv();
     const config = loadConfig();
 

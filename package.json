@@ -1,6 +1,6 @@
 {
   "name": "digital400-storycraft",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Simple configurable story-crafting tool for Digital400 (Pvt) Ltd",
   "type": "module",
   "private": false,

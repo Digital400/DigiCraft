@@ -117,6 +117,13 @@ npm publish --access public
 npm install --save-dev digital400-storycraft
 ```
 
+Initialize templates in your current project root (creates `.env`, `.env.example`, and `config/default.config.json`):
+```bash
+npx storycraft init
+```
+
+Then edit `.env` and `config/default.config.json` and run:
+
 Run:
 ```bash
 npx storycraft setup
