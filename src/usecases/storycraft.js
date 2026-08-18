@@ -58,19 +58,38 @@ export async function runStoryCraftFlow({
   console.log(`Blueprint source: ${blueprintResult.source}`);
   console.log(`Epics to create: ${blueprint.epics.length}`);
 
+  const created = await createIssuesFromBlueprint({
+    jiraClient,
+    config,
+    blueprint,
+    projectKey: selectedProject.key,
+    dryRun
+  });
+
+  return {
+    project: selectedProject,
+    blueprint,
+    blueprintSource: blueprintResult.source,
+    created
+  };
+}
+
+// Shared by CLI (runStoryCraftFlow) and the web preview approve step, so an
+// approved preview creates exactly the blueprint that was shown to the user.
+export async function createIssuesFromBlueprint({ jiraClient, config, blueprint, projectKey, dryRun = false }) {
   const created = {
     epics: [],
     stories: [],
     tasks: []
   };
 
-  for (const epic of blueprint.epics) {
+  for (const [epicIndex, epic] of blueprint.epics.entries()) {
     if (dryRun) {
       console.log(`[DRY-RUN] Epic: ${epic.title}`);
-      created.epics.push({ key: "DRY-EPIC", title: epic.title });
+      created.epics.push({ key: `DRY-EPIC-${epicIndex}`, title: epic.title });
     } else {
       const epicIssue = await jiraClient.createIssue({
-        projectKey: selectedProject.key,
+        projectKey,
         issueTypeName: config.jira.issueTypes.epic,
         summary: epic.title,
         description: epic.description || `Epic generated from HLD ${blueprint.hldTitle}`
@@ -81,14 +100,14 @@ export async function runStoryCraftFlow({
 
     const parentEpicKey = created.epics[created.epics.length - 1].key;
 
-    for (const story of epic.stories || []) {
+    for (const [storyIndex, story] of (epic.stories || []).entries()) {
       if (dryRun) {
         console.log(`  [DRY-RUN] Story: ${story.title}`);
-        created.stories.push({ key: "DRY-STORY", title: story.title, parentKey: parentEpicKey });
+        created.stories.push({ key: `DRY-STORY-${epicIndex}-${storyIndex}`, title: story.title, parentKey: parentEpicKey });
       } else {
         const storyIssue = await createStoryUnderEpic({
           jiraClient,
-          projectKey: selectedProject.key,
+          projectKey,
           storyIssueTypeName: config.jira.issueTypes.story,
           story,
           parentEpicKey,
@@ -110,7 +129,7 @@ export async function runStoryCraftFlow({
 
         const taskIssue = await createTaskUnderStory({
           jiraClient,
-          projectKey: selectedProject.key,
+          projectKey,
           taskIssueTypeName: config.jira.issueTypes.task,
           subTaskIssueTypeName: config?.jira?.issueTypes?.subTask,
           taskName,
@@ -128,11 +147,7 @@ export async function runStoryCraftFlow({
     await maybeCreateAndStartSprint(jiraClient, config, created.epics[0]?.title || blueprint.hldTitle);
   }
 
-  return {
-    project: selectedProject,
-    blueprint,
-    created
-  };
+  return created;
 }
 
 async function createStoryUnderEpic({

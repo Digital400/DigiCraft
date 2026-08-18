@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 
 import { JiraClient } from "../src/integrations/jiraClient.js";
 import { ConfluenceHldProvider } from "../src/providers/confluenceProvider.js";
-import { runStoryCraftFlow } from "../src/usecases/storycraft.js";
+import { createIssuesFromBlueprint } from "../src/usecases/storycraft.js";
+import { buildBlueprint } from "../src/usecases/aiBlueprint.js";
 import { pickAiProviderForRun } from "../src/usecases/aiSelection.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -59,7 +60,11 @@ async function handleVerify(req, res) {
     confluenceEmail,
     confluenceApiToken,
     confluenceSpaceKey,
-    confluenceHldPageId
+    confluenceHldPageId,
+    openaiApiKey,
+    openrouterApiKey,
+    anthropicApiKey,
+    githubToken
   } = body;
 
   const required = {
@@ -80,12 +85,20 @@ async function handleVerify(req, res) {
     return;
   }
 
+  // AI keys are optional; only override process.env when a value is actually provided,
+  // so pickAiProviderForRun() can discover them the same way it does for the CLI.
+  if (openaiApiKey) process.env.OPENAI_API_KEY = openaiApiKey;
+  if (openrouterApiKey) process.env.OPENROUTER_API_KEY = openrouterApiKey;
+  if (anthropicApiKey) process.env.ANTHROPIC_API_KEY = anthropicApiKey;
+  if (githubToken) process.env.GITHUB_TOKEN = githubToken;
+
   const config = loadBaseConfig();
   config.source.provider = "confluence";
   config.source.confluence.hldPageId = confluenceHldPageId;
   if (confluenceSpaceKey) {
     config.source.confluence.spaceKey = confluenceSpaceKey;
   }
+  config.ai.promptOnStart = false;
 
   try {
     const jiraClient = new JiraClient({ baseUrl: jiraBaseUrl, email: jiraEmail, apiToken: jiraApiToken });
@@ -98,7 +111,7 @@ async function handleVerify(req, res) {
     const profile = await jiraClient.testConnection();
     const projects = await jiraClient.listProjects();
 
-    session = { config, jiraClient, hldProvider };
+    session = { config, jiraClient, hldProvider, pending: null };
 
     sendJson(res, 200, { ok: true, user: profile.displayName, projects });
   } catch (error) {
@@ -118,22 +131,48 @@ async function handleGenerate(req, res) {
     return;
   }
 
-  const runConfig = {
-    ...session.config,
-    jira: { ...session.config.jira, defaultProjectKey: projectKey },
-    ai: { ...session.config.ai, promptOnStart: false }
-  };
+  try {
+    const aiRuntime = await pickAiProviderForRun(session.config);
+    const maxInputChars = session.config?.ai?.maxInputChars || 16000;
+    const blueprintResult = await buildBlueprint({
+      hldProvider: session.hldProvider,
+      aiRuntime,
+      maxInputChars
+    });
+
+    // Cache exactly what was previewed so Approve creates the same content (no re-generation).
+    session.pending = { projectKey, blueprint: blueprintResult.blueprint };
+
+    sendJson(res, 200, {
+      ok: true,
+      blueprint: blueprintResult.blueprint,
+      blueprintSource: blueprintResult.source,
+      aiProvider: aiRuntime?.provider || null
+    });
+  } catch (error) {
+    sendJson(res, 500, { ok: false, error: error.message });
+  }
+}
+
+async function handleApprove(req, res) {
+  if (!session || !session.pending) {
+    sendJson(res, 400, { ok: false, error: "Generate a preview before approving." });
+    return;
+  }
+
+  const { projectKey, blueprint } = session.pending;
 
   try {
-    const aiRuntime = await pickAiProviderForRun(runConfig);
-    const result = await runStoryCraftFlow({
+    const created = await createIssuesFromBlueprint({
       jiraClient: session.jiraClient,
-      hldProvider: session.hldProvider,
-      config: runConfig,
-      aiRuntime,
-      dryRun: true
+      config: session.config,
+      blueprint,
+      projectKey,
+      dryRun: false
     });
-    sendJson(res, 200, { ok: true, result });
+
+    session.pending = null;
+    sendJson(res, 200, { ok: true, created });
   } catch (error) {
     sendJson(res, 500, { ok: false, error: error.message });
   }
@@ -170,6 +209,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/api/generate") {
       await handleGenerate(req, res);
+      return;
+    }
+
+    if (req.method === "POST" && req.url === "/api/approve") {
+      await handleApprove(req, res);
       return;
     }
 

@@ -4,6 +4,8 @@ const projectsSection = document.getElementById("projects-section");
 const projectsList = document.getElementById("projects-list");
 const resultsSection = document.getElementById("results-section");
 const resultsContainer = document.getElementById("results");
+const approveButton = document.getElementById("approve-button");
+const approveStatus = document.getElementById("approve-status");
 
 configForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -52,6 +54,8 @@ async function selectProject(project, item) {
   item.classList.add("selected");
 
   resultsSection.hidden = false;
+  approveButton.hidden = true;
+  approveStatus.textContent = "";
   resultsContainer.innerHTML = "<p>Generating preview...</p>";
 
   try {
@@ -67,22 +71,48 @@ async function selectProject(project, item) {
       return;
     }
 
-    renderResults(data.result);
+    renderResults(data.blueprint, data.blueprintSource);
+    approveButton.hidden = false;
+    approveButton.disabled = false;
   } catch (error) {
     resultsContainer.innerHTML = `<p class="error">Request failed: ${error.message}</p>`;
   }
 }
 
-function renderResults(result) {
-  const { blueprint } = result;
+approveButton.addEventListener("click", async () => {
+  approveButton.disabled = true;
+  approveStatus.textContent = "Creating Epics/Stories/Tasks in Jira...";
+  approveStatus.className = "";
 
+  try {
+    const response = await fetch("/api/approve", { method: "POST" });
+    const data = await response.json();
+
+    if (!data.ok) {
+      approveStatus.textContent = `Error: ${data.error}`;
+      approveStatus.className = "error";
+      approveButton.disabled = false;
+      return;
+    }
+
+    const { epics, stories, tasks } = data.created;
+    approveStatus.textContent = `Created ${epics.length} epic(s), ${stories.length} stor${stories.length === 1 ? "y" : "ies"}, ${tasks.length} task(s) in Jira.`;
+    approveStatus.className = "success";
+    approveButton.hidden = true;
+  } catch (error) {
+    approveStatus.textContent = `Request failed: ${error.message}`;
+    approveStatus.className = "error";
+    approveButton.disabled = false;
+  }
+});
+
+function renderResults(blueprint, blueprintSource) {
   resultsContainer.innerHTML = "";
 
   const heading = document.createElement("p");
-  heading.textContent = `HLD: ${blueprint.hldTitle}`;
+  heading.textContent = `HLD: ${blueprint.hldTitle} (source: ${blueprintSource || "n/a"})`;
   resultsContainer.appendChild(heading);
 
-  // Render straight from the blueprint tree; dry-run issue keys are placeholders and not unique per epic.
   blueprint.epics.forEach((epic) => {
     const epicDiv = document.createElement("div");
     epicDiv.className = "epic";
